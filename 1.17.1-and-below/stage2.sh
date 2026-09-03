@@ -4,7 +4,7 @@ apk add openjdk8-jre-base
 apk add nano
 mkdir +p minecraft-server
 cd server
-wget https://github.com/NBWgamer2012/termux-minecraft-installation-tool/tree/main/1.17.1-and-below/versionselect.py
+wget https://github.com/NBWgamer2012/termux-minecraft-installation-tool/raw/refs/heads/main/1.17.1-and-below/versionselect.py
 apk add python3
 python3 versionselect.py
 wget https://github.com/NBWgamer2012/termux-minecraft-installation-tool/tree/main/thingy.txt
