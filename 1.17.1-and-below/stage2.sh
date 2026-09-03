@@ -2,7 +2,7 @@ apk update
 apk upgrade
 apk add openjdk8-jre-base
 apk add nano
-mkdir +p minecraft-server
+mkdir minecraft-server
 cd server
 wget https://github.com/NBWgamer2012/termux-minecraft-installation-tool/raw/refs/heads/main/1.17.1-and-below/versionselect.py
 apk add python3
