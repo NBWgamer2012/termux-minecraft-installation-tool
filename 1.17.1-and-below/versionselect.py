@@ -7,6 +7,9 @@ import urllib.parse
 import urllib.request
 import zipfile
 
+# Target directory where files will be saved
+TARGET_SAVE_DIR = "/root/minecraft-server"
+
 
 def ensure_root():
     """Ensure the script runs with root privileges."""
@@ -16,7 +19,9 @@ def ensure_root():
             print("[+] Re-running with sudo...\n")
             os.execvp("sudo", ["sudo", sys.executable] + sys.argv)
         else:
-            print("[-] Please run this script as root (e.g., su - or sudo python script.py).")
+            print(
+                "[-] Please run this script as root (e.g., su - or sudo python script.py)."
+            )
             sys.exit(1)
 
 
@@ -28,8 +33,13 @@ TARGET_DIR = "1.17.1-and-below"
 def main():
     ensure_root()
 
+    # Ensure /root/minecraft-server exists
+    os.makedirs(TARGET_SAVE_DIR, exist_ok=True)
+
     api_url = f"https://api.github.com/repos/{REPO_USER}/{REPO_NAME}/contents/{TARGET_DIR}"
-    req = urllib.request.Request(api_url, headers={"User-Agent": "Mozilla/5.0"})
+    req = urllib.request.Request(
+        api_url, headers={"User-Agent": "Mozilla/5.0"}
+    )
 
     print("[+] Fetching available folders...")
     try:
@@ -63,7 +73,9 @@ def main():
     print(f"\n[+] You selected: {choice}")
 
     raw_url = f"https://raw.githubusercontent.com/{REPO_USER}/{REPO_NAME}/main/{TARGET_DIR}/{choice}/download.txt"
-    raw_req = urllib.request.Request(raw_url, headers={"User-Agent": "Mozilla/5.0"})
+    raw_req = urllib.request.Request(
+        raw_url, headers={"User-Agent": "Mozilla/5.0"}
+    )
 
     print("[+] Fetching download URL from download.txt...")
     try:
@@ -80,30 +92,28 @@ def main():
     # Determine filename from URL
     parsed_url = urllib.parse.urlparse(download_url)
     filename = os.path.basename(parsed_url.path) or "downloaded_file"
-    current_dir = os.getcwd()
+    filepath = os.path.join(TARGET_SAVE_DIR, filename)
 
-    print(f"[+] Downloading file as root to {current_dir}...")
+    print(f"[+] Downloading file as root to {TARGET_SAVE_DIR}...")
 
-    # Download using wget specifically into the current working directory
-    subprocess.run(["wget", "-P", current_dir, download_url])
+    # Download using wget into /root/minecraft-server
+    subprocess.run(["wget", "-P", TARGET_SAVE_DIR, download_url])
 
-    filepath = os.path.join(current_dir, filename)
-
-    # Check if the downloaded file is a zip archive
-    if zipfile.is_zipfile(filepath):
-        print(f"[+] '{filename}' is a zip archive. Unzipping...")
+    # Strictly check for .zip file extension (case-insensitive)
+    if filename.lower().endswith(".zip"):
+        print(f"[+] '{filename}' has a .zip extension. Unzipping...")
         try:
             with zipfile.ZipFile(filepath, "r") as zip_ref:
-                zip_ref.extractall(current_dir)
+                zip_ref.extractall(TARGET_SAVE_DIR)
             print("[+] Extraction complete.")
 
-            # Optional: Clean up the original zip file after extracting
+            # Clean up the .zip file after extracting
             os.remove(filepath)
             print(f"[+] Removed archive '{filename}'.")
         except Exception as e:
             print(f"[-] Failed to unzip file: {e}")
     else:
-        print("[+] Download completed (file is not a zip archive).")
+        print(f"[+] Download completed (kept '{filename}' as-is).")
 
 
 if __name__ == "__main__":
