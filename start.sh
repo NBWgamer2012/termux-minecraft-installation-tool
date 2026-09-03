@@ -1,0 +1,1 @@
+java -Xmx1500M -Xms200M -jar server.jar

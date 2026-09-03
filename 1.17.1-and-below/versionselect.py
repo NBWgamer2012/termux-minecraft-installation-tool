@@ -3,14 +3,15 @@ import json
 import os
 import subprocess
 import sys
+import urllib.parse
 import urllib.request
+import zipfile
 
 
 def ensure_root():
     """Ensure the script runs with root privileges."""
     if os.geteuid() != 0:
         print("[!] This script requires root privileges.")
-        # Attempt to re-run with sudo if installed
         if subprocess.run(["which", "sudo"], capture_output=True).returncode == 0:
             print("[+] Re-running with sudo...\n")
             os.execvp("sudo", ["sudo", sys.executable] + sys.argv)
@@ -38,7 +39,6 @@ def main():
         print(f"[-] Error fetching directory contents: {e}")
         sys.exit(1)
 
-    # Filter out directories only
     folders = [item["name"] for item in data if item.get("type") == "dir"]
 
     if not folders:
@@ -49,7 +49,6 @@ def main():
     for idx, folder in enumerate(folders, 1):
         print(f"{idx}) {folder}")
 
-    # Prompt user for selection
     choice = None
     while choice is None:
         try:
@@ -63,7 +62,6 @@ def main():
 
     print(f"\n[+] You selected: {choice}")
 
-    # Construct URL for download.txt
     raw_url = f"https://raw.githubusercontent.com/{REPO_USER}/{REPO_NAME}/main/{TARGET_DIR}/{choice}/download.txt"
     raw_req = urllib.request.Request(raw_url, headers={"User-Agent": "Mozilla/5.0"})
 
@@ -79,11 +77,33 @@ def main():
         print("[-] Error: download.txt is empty.")
         sys.exit(1)
 
-    print(f"[+] Downloading file as root from: {download_url}")
+    # Determine filename from URL
+    parsed_url = urllib.parse.urlparse(download_url)
+    filename = os.path.basename(parsed_url.path) or "downloaded_file"
+    current_dir = os.getcwd()
 
-    # Download using wget
-    subprocess.run(["wget", download_url])
-    print("[+] Download completed successfully!")
+    print(f"[+] Downloading file as root to {current_dir}...")
+
+    # Download using wget specifically into the current working directory
+    subprocess.run(["wget", "-P", current_dir, download_url])
+
+    filepath = os.path.join(current_dir, filename)
+
+    # Check if the downloaded file is a zip archive
+    if zipfile.is_zipfile(filepath):
+        print(f"[+] '{filename}' is a zip archive. Unzipping...")
+        try:
+            with zipfile.ZipFile(filepath, "r") as zip_ref:
+                zip_ref.extractall(current_dir)
+            print("[+] Extraction complete.")
+
+            # Optional: Clean up the original zip file after extracting
+            os.remove(filepath)
+            print(f"[+] Removed archive '{filename}'.")
+        except Exception as e:
+            print(f"[-] Failed to unzip file: {e}")
+    else:
+        print("[+] Download completed (file is not a zip archive).")
 
 
 if __name__ == "__main__":
