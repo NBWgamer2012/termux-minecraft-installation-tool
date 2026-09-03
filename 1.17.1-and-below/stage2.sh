@@ -1,4 +1,4 @@
-#!/bin/bash
+#bin/bash
 
 # Exit on error or missing dependencies
 set -e
