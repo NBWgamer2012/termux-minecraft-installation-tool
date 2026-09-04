@@ -7,8 +7,7 @@ import urllib.parse
 import urllib.request
 import zipfile
 
-# Target directory where files will be saved
-TARGET_SAVE_DIR = "/root/minecraft-server"
+BASE_SAVE_DIR = "/root/minecraft-server"
 
 
 def ensure_root():
@@ -32,9 +31,6 @@ TARGET_DIR = "1.17.1-and-below"
 
 def main():
     ensure_root()
-
-    # Ensure /root/minecraft-server exists
-    os.makedirs(TARGET_SAVE_DIR, exist_ok=True)
 
     api_url = f"https://api.github.com/repos/{REPO_USER}/{REPO_NAME}/contents/{TARGET_DIR}"
     req = urllib.request.Request(
@@ -72,6 +68,10 @@ def main():
 
     print(f"\n[+] You selected: {choice}")
 
+    # Set destination directory to /root/minecraft-server/<selected_option>
+    target_save_dir = os.path.join(BASE_SAVE_DIR, choice)
+    os.makedirs(target_save_dir, exist_ok=True)
+
     raw_url = f"https://raw.githubusercontent.com/{REPO_USER}/{REPO_NAME}/main/{TARGET_DIR}/{choice}/download.txt"
     raw_req = urllib.request.Request(
         raw_url, headers={"User-Agent": "Mozilla/5.0"}
@@ -92,19 +92,19 @@ def main():
     # Determine filename from URL
     parsed_url = urllib.parse.urlparse(download_url)
     filename = os.path.basename(parsed_url.path) or "downloaded_file"
-    filepath = os.path.join(TARGET_SAVE_DIR, filename)
+    filepath = os.path.join(target_save_dir, filename)
 
-    print(f"[+] Downloading file as root to {TARGET_SAVE_DIR}...")
+    print(f"[+] Downloading file as root to {target_save_dir}...")
 
-    # Download using wget into /root/minecraft-server
-    subprocess.run(["wget", "-P", TARGET_SAVE_DIR, download_url])
+    # Download using wget into /root/minecraft-server/<choice>
+    subprocess.run(["wget", "-P", target_save_dir, download_url])
 
     # Strictly check for .zip file extension (case-insensitive)
     if filename.lower().endswith(".zip"):
         print(f"[+] '{filename}' has a .zip extension. Unzipping...")
         try:
             with zipfile.ZipFile(filepath, "r") as zip_ref:
-                zip_ref.extractall(TARGET_SAVE_DIR)
+                zip_ref.extractall(target_save_dir)
             print("[+] Extraction complete.")
 
             # Clean up the .zip file after extracting
