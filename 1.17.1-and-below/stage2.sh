@@ -9,7 +9,5 @@ python3 versionselect.py
 cd minecraft-server
 wget https://github.com/NBWgamer2012/termux-minecraft-installation-tool/tree/main/thingy.txt
 mv thingy.txt eula.txt
-wget https://github.com/NBWgamer2012/termux-minecraft-installation-tool/raw/refs/heads/main/start.sh
-chmod +x start.sh
-echo "you can start the server by running start.sh in the minecraft-server directory"
+echo "you can start the server by typing in java -Xmx1000M -Xms100M -jar [name of server jar] in the minecraft-server directory"
 
